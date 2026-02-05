@@ -1,0 +1,45 @@
+[
+    {
+        "id": "tab_mqtt_broker",
+        "type": "tab",
+        "label": "MQTT Broker (Aedes)",
+        "disabled": false,
+        "info": "Node-RED内蔵のMQTTブローカー。起動時に自動でポート1883でリッスンを開始します。"
+    },
+    {
+        "id": "node_aedes_broker",
+        "type": "aedes broker",
+        "z": "tab_mqtt_broker",
+        "name": "Aedes MQTT Broker",
+        "mqtt_port": "1883",
+        "mqtt_ws_bind": "path",
+        "mqtt_ws_path": "",
+        "mqtt_ws_port": "",
+        "usetls": false,
+        "uselocalfiles": false,
+        "cert": "",
+        "key": "",
+        "certname": "",
+        "keyname": "",
+        "certdata": "",
+        "keydata": "",
+        "persistence": "memory",
+        "dburl": "",
+        "x": 250,
+        "y": 100,
+        "wires": [
+            [],
+            []
+        ]
+    },
+    {
+        "id": "node_comment_aedes",
+        "type": "comment",
+        "z": "tab_mqtt_broker",
+        "name": "📡 MQTTブローカー（Aedes）",
+        "info": "このノードがデプロイされると、ポート1883でMQTTブローカーが起動します。\n\n接続先: localhost:1883 (認証なし)\n\n※SSL設定が必要な場合はUI上で設定してください",
+        "x": 250,
+        "y": 60,
+        "wires": []
+    }
+]
