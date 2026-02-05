@@ -31,7 +31,7 @@ PATROL_POINTS = [
 
 # Timeouts (seconds)
 GUEST_TIMEOUT = 20          # Guest対応のタイムアウト
-PATROL_IDLE_TIME = 2        # 次のポイントへ移動するまでの待機時間
+PATROL_IDLE_TIME = 5        # 次のポイントへ移動するまでの待機時間
 SPEECH_INTERVAL = 10        # 音声案内の間隔
 
 # Guest Detection

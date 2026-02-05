@@ -57,6 +57,9 @@ class PatrolState:
     prev_level: CongestionLevel = CongestionLevel.UNKNOWN
     idle_count: int = 0
     last_speech_time: float = 0.0
+    last_move_time: float = 0.0
+    waiting_for_arrival: bool = False
+    arrival_timeout: float = 0.0
 
 
 class PatrolService:
@@ -141,6 +144,7 @@ class PatrolService:
             self.state.prev_level = CongestionLevel.UNKNOWN
             self.state.idle_count = 0
             self.state.is_recording = False
+            self.state.waiting_for_arrival = False
             logger.info("UIリセット: パトロール復帰待ち")
             self._add_log("UIリセット: パトロール復帰待ち")
             
@@ -148,6 +152,7 @@ class PatrolService:
             # パトロール開始
             self.state.system_enabled = True
             self.state.guest_handling = False
+            self.state.waiting_for_arrival = False
             self.state.idle_count = 0
             self.state.prev_level = CongestionLevel.UNKNOWN
             self.state.current_index = 0
@@ -275,6 +280,18 @@ class PatrolService:
             self.temi.heading = float(where["heading"])
         
         self.temi.status = what.get("status", "unknown")
+        
+        # 移動完了チェック
+        status_lower = self.temi.status.lower()
+        if self.state.waiting_for_arrival:
+            if status_lower == "complete":
+                logger.info("移動完了を確認 (status=complete)")
+                self.state.waiting_for_arrival = False
+                self.state.idle_count = 0
+            elif status_lower == "abort" or status_lower == "stop":
+                logger.info(f"移動中断を確認 (status={status_lower})")
+                self.state.waiting_for_arrival = False
+                self.state.idle_count = 0
     
     # =========================================================================
     #  タイマー処理
@@ -294,8 +311,11 @@ class PatrolService:
     
     def _on_timer_tick(self):
         """1秒ごとの処理"""
-        # Idle判定
-        is_idle = self.temi.status.lower() in ["idle", "complete", "stop", "abort", "unknown", ""]
+        # Idle判定 (コマンド送信直後 5秒間は無視)
+        is_moving_wait = (time.time() - self.state.last_move_time) < 5.0
+        is_temi_idle = self.temi.status.lower() in ["idle", "complete", "stop", "abort", "unknown", ""]
+        
+        is_idle = is_temi_idle and (not is_moving_wait)
         
         # 音声案内
         now = time.time()
@@ -319,12 +339,20 @@ class PatrolService:
             # パトロール次ポイント
             if (self.state.patrol_active and 
                 not self.state.guest_handling and 
+                not self.state.waiting_for_arrival and
                 self.state.idle_count >= config.PATROL_IDLE_TIME):
                 self.state.idle_count = 0
                 self.state.current_index = (self.state.current_index + 1) % len(config.PATROL_POINTS)
-                logger.info("パトロール: 次の地点へ移動")
+                logger.info(f"パトロール: 次の地点へ移動 (index={self.state.current_index})")
                 self._add_log("パトロール: 次の地点へ移動")
                 self._goto_patrol_point()
+        
+        # 到着待ちタイムアウト監視 (15秒)
+        if self.state.waiting_for_arrival:
+            if time.time() > self.state.arrival_timeout:
+                logger.warning(f"移動タイムアウト: 到着扱いとして続行 (Current Status: {self.temi.status})")
+                self.state.waiting_for_arrival = False
+                self.state.idle_count = config.PATROL_IDLE_TIME
         else:
             if self.state.idle_count > 0:
                 self.state.idle_count = 0
@@ -345,6 +373,9 @@ class PatrolService:
             "command": "gotoLocation",
             "position": {"location": location}
         })
+        self.state.last_move_time = time.time()
+        self.state.waiting_for_arrival = True
+        self.state.arrival_timeout = time.time() + 20.0
     
     def _goto_position(self, x: float, y: float, yaw: float):
         """指定座標へ移動"""
@@ -352,6 +383,9 @@ class PatrolService:
             "command": "goToPosition",
             "position": {"x": x, "y": y, "degrees": round(yaw), "speed": 0.2}
         })
+        self.state.last_move_time = time.time()
+        self.state.waiting_for_arrival = True
+        self.state.arrival_timeout = time.time() + 20.0
     
     def _goto_patrol_point(self):
         """現在のパトロールポイントへ移動"""
