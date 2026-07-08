@@ -27,7 +27,8 @@
             api_gate: "改札",
             error_ai: "AIシステムエラー",
             error_network: "通信エラー",
-            error_sorry: "申し訳ありません。下の「駅員とビデオ通話する」ボタンから駅員をお呼び出しください。"
+            error_sorry: "申し訳ありません。下の「駅員とビデオ通話する」ボタンから駅員をお呼び出しください。",
+            demo_notice: "デモ用の架空ダイヤです"
         },
         en: {
             start_guide: "Touch to start guidance",
@@ -57,6 +58,7 @@
             api_gate: "gate",
             error_ai: "AI System Error",
             error_network: "Network Error",
-            error_sorry: "Sorry. Please use the 'Video Call Staff' button below to contact a station staff."
+            error_sorry: "Sorry. Please use the 'Video Call Staff' button below to contact a station staff.",
+            demo_notice: "Demo: fictional timetable"
         }
     }

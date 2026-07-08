@@ -166,6 +166,9 @@
     }
     .btn-home { background-color: #6c757d; color: white; }
     .btn-recall { background-color: #28a745; color: white; }
+
+    /* === デモ用注記 === */
+    .demo-notice { font-size: 12px; color: #888; text-align: center; margin-top: 6px; }
 </style>
 
 <!-- 広告画面 -->
@@ -238,6 +241,7 @@
         <button class="call-btn" ng-click="send({payload: {mode: 'remote'}})">
             <i class="fa fa-video-camera"></i> {{i18n[lang].video_call}}
         </button>
+        <div class="demo-notice">{{i18n[lang].demo_notice}}</div>
     </div>
     <button class="close-sys-btn" ng-click="send({payload: {mode: 'reset'}})">{{i18n[lang].end_guide}}</button>
 </div>
