@@ -7,10 +7,20 @@
 ```
 nodered_json_with_python/
 ├── README.md                    # このファイル
-├── flows/                       # Node-REDフロー
+├── manifest.json                # UIテンプレート注入マッピング（build_flow.py用）
+├── flows/                       # Node-REDフロー（ビルド成果物含む）
 │   ├── mqtt_broker_flow.json    # ★ MQTTブローカー (Aedes)
-│   ├── robot_ui_flow.json       # エンドユーザー向けUI
+│   ├── robot_ui_flow.json       # エンドユーザー向けUI（手編集禁止・ビルド成果物）
 │   └── admin_ui_flow.json       # 管理者ダッシュボード
+├── src/                         # robot_ui_flow.json から外部化したUIテンプレート
+│   ├── ui/
+│   │   └── main_template.html   # UIテンプレート本体（HTML+CSS+JS）
+│   ├── i18n.js                  # 多言語データ（scope.i18n オブジェクトリテラル）
+│   └── flows/
+│       └── robot_ui_flow.skeleton.json  # プレースホルダー入りフロー骨格
+├── tools/                       # フロービルドツール
+│   ├── extract_flow.py          # flows/robot_ui_flow.json → src/ へ抽出
+│   └── build_flow.py            # src/ → flows/robot_ui_flow.json を再生成
 ├── python/                      # Pythonサービス
 │   ├── patrol_service.py        # パトロールロジック
 │   ├── config.py                # 設定
@@ -187,6 +197,41 @@ https: {
 ```
 
 > ⚠️ 自己署名証明書のため、ブラウザで「安全ではありません」警告が出ます。
+
+---
+
+## 🧩 UIテンプレートのビルドフロー
+
+`robot_ui_flow.json` の `node_ui_template_main`（画面表示ノード）は19,000文字超のHTML+CSS+JSを1つの文字列フィールドに丸ごと保持しており、フローJSONを直接編集するのは差分レビューも困難でした。パトロールロジックを `python/patrol_service.py` に外部化したのと同じ考え方で、UIテンプレートも `src/` 配下のソースファイルに外部化しています。
+
+### 編集ルール
+
+- **UIテンプレートの編集は `src/ui/main_template.html`（多言語文言は `src/i18n.js`）で行う。**
+- **`flows/robot_ui_flow.json` は手編集禁止（ビルド成果物）。** 直接編集すると次回ビルド時に上書きされます。
+
+### ビルド（src/ → flows/robot_ui_flow.json）
+
+`src/` を編集したら、以下でフローJSONを再生成します。
+
+```bash
+python3 tools/build_flow.py
+```
+
+`--check` を付けると、実際にはファイルを書き換えずに現在の `flows/robot_ui_flow.json` との差分の有無だけを確認できます（CIや編集前チェックに利用）。
+
+```bash
+python3 tools/build_flow.py --check
+```
+
+### 逆抽出（flows/robot_ui_flow.json → src/）
+
+Node-REDエディタ側でテンプレートを直接編集してしまった場合は、以下で `src/` 側に再抽出して同期を取り直します。
+
+```bash
+python3 tools/extract_flow.py
+```
+
+抽出・ビルドのマッピングは `manifest.json` に記録されており（対象ノードID・フィールド名・分割元ファイル）、`build_flow.py` と `extract_flow.py` はこれを共有します。
 
 ---
 

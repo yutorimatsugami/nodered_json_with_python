@@ -1,0 +1,17 @@
+{
+  "target": "flows/robot_ui_flow.json",
+  "skeleton": "src/flows/robot_ui_flow.skeleton.json",
+  "injections": [
+    {
+      "node_id": "node_ui_template_main",
+      "field": "format",
+      "source": "src/ui/main_template.html",
+      "nested": [
+        {
+          "marker": "__I18N__",
+          "source": "src/i18n.js"
+        }
+      ]
+    }
+  ]
+}

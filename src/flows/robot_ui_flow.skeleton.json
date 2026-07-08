@@ -1,0 +1,815 @@
+[
+    {
+        "id": "tab_robot_ui",
+        "type": "tab",
+        "label": "案内ロボットUI(完成版)",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "node_inject_init",
+        "type": "inject",
+        "z": "tab_robot_ui",
+        "name": "起動 / リセット",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 160,
+        "wires": [
+            [
+                "node_change_to_ad"
+            ]
+        ]
+    },
+    {
+        "id": "node_ui_template_main",
+        "type": "ui_template",
+        "z": "tab_robot_ui",
+        "group": "group_robot_main",
+        "name": "画面表示(広告/案内/チャット)",
+        "order": 1,
+        "width": "12",
+        "height": "10",
+        "format": "__MAIN_TEMPLATE__",
+        "storeOutMessages": true,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 710,
+        "y": 160,
+        "wires": [
+            [
+                "node_switch_mode_v2"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_init_msg",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "メニュー画面へ",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"mode\": \"menu\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 700,
+        "y": 300,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_req_prep",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "APIリクエスト作成",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"message\": msg.payload.text, \"lang\": $exists(msg.payload.lang) ? msg.payload.lang : \"ja\"}",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 680,
+        "y": 380,
+        "wires": [
+            [
+                "node_http_request"
+            ]
+        ]
+    },
+    {
+        "id": "node_http_request",
+        "type": "http request",
+        "z": "tab_robot_ui",
+        "name": "POST /chat",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://192.168.11.7:8000/chat",
+        "tls": "79868a5d-8698-42b9-86e9-7b996c8592b6",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 890,
+        "y": 380,
+        "wires": [
+            [
+                "node_change_res_parse",
+                "node_change_speak_cmd"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_res_parse",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "回答を画面へ",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.display_text",
+                "pt": "msg",
+                "to": "payload.response",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload.mode",
+                "pt": "msg",
+                "to": "guide",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1080,
+        "y": 380,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_to_ad",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "モードを広告(ad)にする",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"mode\": \"ad\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 390,
+        "y": 160,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_thinking",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "考え中画面を表示",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"mode\": \"thinking\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 670,
+        "y": 500,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_switch_mode_v2",
+        "type": "switch",
+        "z": "tab_robot_ui",
+        "name": "モード判定(拡張版)",
+        "property": "payload.mode",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "init",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "api_req",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "reset",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "remote",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "init_chat",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "startRecording",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "stopRecording",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "web_voice_res",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "guide",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 9,
+        "x": 370,
+        "y": 380,
+        "wires": [
+            [
+                "node_change_init_msg",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_req_prep",
+                "node_change_thinking",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_to_ad",
+                "node_change_end_call",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_remote",
+                "node_change_call_owner",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_chat_init",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_start_rec",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_stop_rec",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_change_res_parse",
+                "node_change_speak_cmd",
+                "node_mqtt_out_internal_ui"
+            ],
+            [
+                "node_ui_template_main",
+                "node_mqtt_out_internal_ui"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_start_rec",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "録音開始コマンド",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"command\": \"startRecording\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 720,
+        "wires": [
+            [
+                "node_mqtt_out_voice",
+                "node_change_recording_guide"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_recording_guide",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "録音中表示(guideモード)",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.display_text",
+                "pt": "msg",
+                "to": "🎤 録音中...<br>停止ボタンを押してください",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.mode",
+                "pt": "msg",
+                "to": "guide",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 790,
+        "y": 720,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_stop_rec",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "録音停止コマンド",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"command\": \"stopRecording\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 570,
+        "y": 780,
+        "wires": [
+            [
+                "node_mqtt_out_voice",
+                "node_change_thinking"
+            ]
+        ]
+    },
+    {
+        "id": "node_mqtt_out_voice",
+        "type": "mqtt out",
+        "z": "tab_robot_ui",
+        "name": "MQTT送信(voice)",
+        "topic": "request/voice",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker_local",
+        "x": 780,
+        "y": 750,
+        "wires": []
+    },
+    {
+        "id": "node_change_chat_init",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "チャット初期画面へ",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.display_text",
+                "pt": "msg",
+                "to": "ご質問をどうぞ！",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "payload.mode",
+                "pt": "msg",
+                "to": "guide",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 700,
+        "y": 660,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_remote",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "リモート画面を表示",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"mode\": \"remote\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 460,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_call_owner",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "callOwnerコマンド作成",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"command\": \"callOwner\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 540,
+        "wires": [
+            [
+                "node_mqtt_out_temi"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_speak_cmd",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "speakコマンド作成",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"command\": \"speak\", \"content\": msg.payload.response}",
+                "tot": "jsonata"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 1080,
+        "y": 450,
+        "wires": [
+            [
+                "node_mqtt_out_temi"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_end_call",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "endCallコマンド作成",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"command\": \"endCall\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 560,
+        "y": 250,
+        "wires": [
+            [
+                "node_mqtt_out_temi"
+            ]
+        ]
+    },
+    {
+        "id": "node_mqtt_in_temi",
+        "type": "mqtt in",
+        "z": "tab_robot_ui",
+        "name": "MQTT受信(temiステータス)",
+        "topic": "info/temi01",
+        "qos": "2",
+        "datatype": "json",
+        "broker": "mqtt_broker_local",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 180,
+        "y": 600,
+        "wires": [
+            [
+                "node_switch_temi_event"
+            ]
+        ]
+    },
+    {
+        "id": "node_switch_temi_event",
+        "type": "switch",
+        "z": "tab_robot_ui",
+        "name": "temiイベント判定",
+        "property": "payload.command",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "callEnded",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "voiceResponse",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 420,
+        "y": 600,
+        "wires": [
+            [
+                "node_change_to_call_ended"
+            ],
+            [
+                "node_change_voice_response"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_voice_response",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "音声応答を画面へ",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload.display_text",
+                "pt": "msg",
+                "to": "payload.response",
+                "tot": "msg"
+            },
+            {
+                "t": "set",
+                "p": "payload.mode",
+                "pt": "msg",
+                "to": "guide",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 620,
+        "y": 640,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_change_to_call_ended",
+        "type": "change",
+        "z": "tab_robot_ui",
+        "name": "通話終了画面へ",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "{\"mode\": \"call_ended\"}",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 620,
+        "y": 600,
+        "wires": [
+            [
+                "node_ui_template_main"
+            ]
+        ]
+    },
+    {
+        "id": "node_mqtt_out_temi",
+        "type": "mqtt out",
+        "z": "tab_robot_ui",
+        "name": "MQTT送信(temi)",
+        "topic": "request/temi01",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker_local",
+        "x": 780,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "node_mqtt_out_internal_ui",
+        "type": "mqtt out",
+        "z": "tab_robot_ui",
+        "name": "内部イベント送信",
+        "topic": "internal/ui_event",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "mqtt_broker_local",
+        "x": 600,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "3aa19c87-5dc9-4c36-8c1b-953d7870db8b",
+        "type": "mqtt in",
+        "z": "tab_robot_ui",
+        "name": "Events from System",
+        "topic": "internal/ui_control",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "mqtt_broker_local",
+        "x": 100,
+        "y": 450,
+        "wires": [
+            [
+                "node_switch_mode_v2"
+            ]
+        ]
+    },
+    {
+        "id": "group_robot_main",
+        "type": "ui_group",
+        "name": "メイン画面",
+        "tab": "tab_robot_dash",
+        "order": 1,
+        "disp": false,
+        "width": "12",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "tab_robot_dash",
+        "type": "ui_tab",
+        "name": "案内ロボットUI",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "mqtt_broker_local",
+        "type": "mqtt-broker",
+        "name": "Local Aedes",
+        "broker": "192.168.11.7",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": "",
+        "credentials": {}
+    },
+    {
+        "id": "79868a5d-8698-42b9-86e9-7b996c8592b6",
+        "type": "tls-config",
+        "name": "Ignore Self-Signed Cert",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    },
+    {
+        "id": "7dfe0908a56e1ac3",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
