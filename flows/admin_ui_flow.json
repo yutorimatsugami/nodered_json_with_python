@@ -252,7 +252,7 @@
     "id": "mqtt_broker_local",
     "type": "mqtt-broker",
     "name": "Local Mosquitto",
-    "broker": "192.168.11.7",
+    "broker": "192.168.11.2",
     "port": "1883",
     "clientid": "",
     "autoConnect": true,

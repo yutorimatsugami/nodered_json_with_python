@@ -12,7 +12,7 @@ import time
 import random
 
 # --- 設定 ---
-BROKER_ADDRESS = "192.168.11.7"
+BROKER_ADDRESS = "192.168.11.2"
 PORT = 1883
 TOPIC = "station/sensor/data"
 INTERVAL = 2.5  # 送信間隔（秒）

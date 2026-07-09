@@ -3,7 +3,7 @@ MQTT & システム設定
 """
 
 # MQTT Broker (aedes on Node-RED)
-MQTT_BROKER = "localhost"  # Node-RED内蔵aedesブローカー
+MQTT_BROKER = "192.168.11.2"  # Node-RED内蔵aedesブローカー
 MQTT_PORT = 1883
 MQTT_USER = ""  # aedesデフォルトは認証なし
 MQTT_PASSWORD = ""

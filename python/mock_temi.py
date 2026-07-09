@@ -13,7 +13,7 @@ import random
 import threading
 
 # --- 設定 ---
-BROKER_ADDRESS = "192.168.11.7"
+BROKER_ADDRESS = "192.168.11.2"
 PORT = 1883
 TEMI_ID = "temi01"
 TOPIC_COMMAND = f"request/{TEMI_ID}"
