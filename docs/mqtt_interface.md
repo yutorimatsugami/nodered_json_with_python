@@ -14,6 +14,7 @@ Node-RED（UI）と Python（ロジック）間の通信仕様。
 | `station/sensor/data` | → | YOLO | Python | 混雑度・Guest座標 |
 | `info/temi01` | → | Temi | Python | ロボット状態 |
 | `request/temi01` | ← | Python | Temi | 移動コマンド |
+| `request/voice` | → | Node-RED | （未購読） | 録音開始/停止イベント |
 
 ---
 
@@ -39,6 +40,10 @@ UIからのイベントを通知。
 | `stop` | パトロール停止 |
 | `startRecording` | 音声録音開始 |
 | `stopRecording` | 音声録音終了 |
+| `remote` | 遠隔サポート（リモート通話）画面表示 |
+| `init_chat` | チャット案内画面表示 |
+| `guide` | 案内（チャット）画面へ応答結果を表示 |
+| `web_voice_res` | 音声チャットのAI応答結果を画面に反映 |
 | その他 | タイマーリセットのみ |
 
 ---
@@ -133,9 +138,9 @@ UIへの制御コマンド。
 
 ## request/temi01
 
-**方向**: Python → Temi
+**方向**: Python → Temi（`speak` コマンドのみ Node-RED → Temi）
 
-ロボットへのコマンド。
+ロボットへのコマンド。移動系（`gotoLocation` / `goToPosition` / `stop`）はPython (`patrol_service.py`) が送信しますが、`speak` はチャット応答受信時にNode-RED（`node_mqtt_out_temi`）が直接送信します。詳細はREADMEの「役割分担」を参照。
 
 ### Payload
 
@@ -161,5 +166,29 @@ UIへの制御コマンド。
 {
   "command": "speak",
   "content": "こんにちは"
+}
+```
+
+---
+
+## request/voice
+
+**方向**: Node-RED → （未購読）
+
+音声録音の開始/停止イベント（`node_mqtt_out_voice`）。
+
+> ⚠️ 現状、このトピックを購読しているコンポーネントはありません（`patrol_service.py` の購読トピックは `internal/ui_event` / `station/sensor/data` / `info/temi01` のみ）。実際の音声認識・応答生成はHTTPの `POST /voice_chat`（外部API server、`robot_service_api_server`）経由で行われており、本トピックはデッドコードの可能性があります。
+
+### Payload
+
+```json
+// 録音開始
+{
+  "command": "startRecording"
+}
+
+// 録音停止
+{
+  "command": "stopRecording"
 }
 ```
